@@ -13,4 +13,37 @@ describe "Rack Parameter Naming/Parsing" do
       expect(params(form_html)).to eql({"username" => "zerocool", "password" => "1337"})
     end    
   end
+
+  context "when the expected out come is a parameter with an array of values" do
+    it "parses multiple input fields into an array of values for a single key" do
+      form_html = <<-HTML
+      <form action="not_specified" method="post">
+        <input type="checkbox" name="?" value="4" checked />
+        <input type="checkbox" name="??" value="5" checked />
+        <input type="checkbox" name="???" value="6" checked />
+      </form>
+      HTML
+
+      expect(params(form_html)).to eql({"category_ids" => ["4", "5", "6"]})
+    end
+
+    it "can be mixed with other basic field names and array field names" do
+      form_html = <<-HTML
+      <form action="not_specified" method="post">
+        <input type="text" name="?" value="Karaoke!" />
+        <input type="checkbox" name="??" value="4" checked />
+        <input type="checkbox" name="???" value="5" checked />
+        <input type="checkbox" name="????" value="6" checked />
+        <input type="text" name="?????" value="Joe" />
+        <input type="text" name="??????" value="Jane" />
+      </form>
+      HTML
+
+      expect(params(form_html)).to eql({
+                                        "category_ids" => ["4", "5", "6"],
+                                        "party_name" => "Karaoke!",
+                                        "guest_names" => ["Joe", "Jane"]
+                                        })
+    end
+  end
 end
